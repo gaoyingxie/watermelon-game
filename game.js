@@ -643,10 +643,35 @@ class Game {
     dropFruit() {
         if (this.gameOver) return;
         
+        const radius = CONFIG.FRUITS[this.currentFruitType].radius;
+        let x = this.mouseX || this.width / 2;
+        let y = radius + 10;
+        
+        // 检查是否与现有水果重叠，如果有则调整位置
+        const maxAttempts = 10;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            let hasOverlap = false;
+            for (const existing of this.fruits) {
+                const dx = x - existing.x;
+                const dy = y - existing.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < radius + existing.radius) {
+                    hasOverlap = true;
+                    // 向上调整位置
+                    y = existing.y - existing.radius - radius - 2;
+                    break;
+                }
+            }
+            if (!hasOverlap) break;
+        }
+        
+        // 确保不超出顶部
+        y = Math.max(radius + 5, y);
+        
         const fruit = this.fruitPool.acquire(
             this.currentFruitType,
-            this.mouseX,
-            CONFIG.FRUITS[this.currentFruitType].radius + 10
+            x,
+            y
         );
         fruit.vy = 2;
         this.fruits.push(fruit);
