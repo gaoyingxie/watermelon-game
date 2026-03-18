@@ -622,8 +622,8 @@ class Game {
                 fruit.vx = -Math.abs(fruit.vx) * WALL_BOUNCE;
             }
             
-            // 底部碰撞 - 停在白色游戏区域底部（紧贴controls上方）
-            const bottomLimit = this.height - 5; // 只留5px边距
+            // 底部碰撞 - 停在游戏区域底部（留出controls空间）
+            const bottomLimit = this.height - 65; // 留出65px给controls
             if (fruit.y + fruit.radius > bottomLimit) {
                 fruit.y = bottomLimit - fruit.radius;
                 fruit.vy = -Math.abs(fruit.vy) * WALL_BOUNCE;
