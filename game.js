@@ -624,8 +624,8 @@ class Game {
             }
         }
         
-        // 多轮碰撞处理（增加迭代次数让堆叠更稳定）
-        for (let iteration = 0; iteration < 10; iteration++) {
+        // 多轮碰撞处理（让堆叠更稳定）
+        for (let iteration = 0; iteration < 3; iteration++) {
             for (let i = 0; i < this.fruits.length; i++) {
                 for (let j = i + 1; j < this.fruits.length; j++) {
                     if (this.checkCircleCollision(this.fruits[i], this.fruits[j])) {
