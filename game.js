@@ -571,6 +571,8 @@ class Game {
         this.mouseX = 0;
         this.width = 0;
         this.height = 0;
+        this.lastDropTime = 0;
+        this.dropCooldown = 200; // 200ms 冷却时间
         
         // 对象池
         this.fruitPool = new ObjectPool(
@@ -599,14 +601,12 @@ class Game {
         this.resize();
         window.addEventListener('resize', () => this.resize());
         
-        // 控制
-        this.canvas.addEventListener('mousemove', e => this.handleMove(e));
-        this.canvas.addEventListener('touchmove', e => {
+        // 控制 - 使用 pointer 事件减少延迟
+        this.canvas.addEventListener('pointermove', e => {
             e.preventDefault();
             this.handleMove(e);
         });
-        this.canvas.addEventListener('click', () => this.dropFruit());
-        this.canvas.addEventListener('touchstart', e => {
+        this.canvas.addEventListener('pointerdown', e => {
             e.preventDefault();
             this.handleMove(e);
             this.dropFruit();
@@ -635,13 +635,19 @@ class Game {
     handleMove(e) {
         if (this.gameOver) return;
         const rect = this.canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        // 支持 pointer、mouse、touch 事件
+        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
         const r = CONFIG.FRUITS[this.currentFruitType].radius;
         this.mouseX = Math.max(r, Math.min(this.width - r, clientX - rect.left));
     }
     
     dropFruit() {
         if (this.gameOver) return;
+        
+        // 冷却检查，防止重复触发
+        const now = Date.now();
+        if (now - this.lastDropTime < this.dropCooldown) return;
+        this.lastDropTime = now;
         
         const radius = CONFIG.FRUITS[this.currentFruitType].radius;
         let x = this.mouseX || this.width / 2;
