@@ -33,7 +33,7 @@ const CONFIG = {
     // 性能设置
     PERF: {
         MAX_PARTICLES: 100,
-        COLLISION_ITERATIONS: 3,
+        COLLISION_ITERATIONS: 5,
         GRID_SIZE: 100  // 空间网格大小
     }
 };
@@ -726,21 +726,14 @@ class Game {
             this.grid.insert(fruit);
         }
         
-        // 碰撞检测（使用网格优化）- 稳定版本
-        const processed = new Set();
+        // 碰撞检测（使用网格优化）- 增强版本
         for (let iter = 0; iter < CONFIG.PERF.COLLISION_ITERATIONS; iter++) {
-            processed.clear();
             for (const fruit of this.fruits) {
                 const neighbors = this.grid.getNeighbors(fruit);
                 for (const other of neighbors) {
                     if (fruit === other) continue;
-                    // 每轮迭代只处理一次每对碰撞
-                    const pairKey = fruit < other ? `${fruit}-${other}` : `${other}-${fruit}`;
-                    if (processed.has(pairKey)) continue;
-                    
                     if (this.checkCollision(fruit, other)) {
                         this.resolveCollision(fruit, other);
-                        processed.add(pairKey);
                     }
                 }
             }
@@ -751,6 +744,26 @@ class Game {
             if (fruit.y + fruit.radius > this.height) {
                 fruit.y = this.height - fruit.radius;
                 if (fruit.vy > 0) fruit.vy = 0;
+            }
+        }
+        
+        // 额外：确保没有水果重叠（对底部堆积的特别处理）
+        for (let i = 0; i < this.fruits.length; i++) {
+            for (let j = i + 1; j < this.fruits.length; j++) {
+                const f1 = this.fruits[i];
+                const f2 = this.fruits[j];
+                const dx = f2.x - f1.x;
+                const dy = f2.y - f1.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < f1.radius + f2.radius && dist > 0) {
+                    const overlap = f1.radius + f2.radius - dist;
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    f1.x -= nx * overlap * 0.55;
+                    f1.y -= ny * overlap * 0.55;
+                    f2.x += nx * overlap * 0.55;
+                    f2.y += ny * overlap * 0.55;
+                }
             }
         }
     }
@@ -778,7 +791,7 @@ class Game {
             return;
         }
         
-        // 位置修正（完全推开，减少迭代）
+        // 位置修正（完全推开）
         const overlap = f1.radius + f2.radius - dist;
         const nx = dx / dist;
         const ny = dy / dist;
@@ -788,8 +801,8 @@ class Game {
         const m1r = f2.mass / tm;
         const m2r = f1.mass / tm;
         
-        // 使用更大的分离系数，确保完全分开
-        const separationFactor = 1.02;
+        // 更大的分离系数，确保完全分开
+        const separationFactor = 1.1;
         f1.x -= nx * overlap * m1r * separationFactor;
         f1.y -= ny * overlap * m1r * separationFactor;
         f2.x += nx * overlap * m2r * separationFactor;
