@@ -251,6 +251,9 @@ class Game {
         this.canvas.height = rect.height;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
+        
+        // 调试：在画布底部画一条红线标记边界
+        this.debugBoundary = true;
     }
 
     handleMove(e) {
@@ -731,6 +734,16 @@ class Game {
         // 绘制粒子
         for (const p of this.particles) {
             p.draw(this.ctx);
+        }
+        
+        // 调试：画底部边界红线
+        if (this.debugBoundary) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, this.height);
+            this.ctx.lineTo(this.width, this.height);
+            this.ctx.strokeStyle = '#ff0000';
+            this.ctx.lineWidth = 3;
+            this.ctx.stroke();
         }
     }
 
