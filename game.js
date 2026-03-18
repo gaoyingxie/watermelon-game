@@ -250,9 +250,9 @@ class Game {
         this.width = this.canvas.width;
         this.height = this.canvas.height;
         
-        // 手机端：动态调整高度，减去controls高度
-        const controlsHeight = 70;
-        this.gameAreaHeight = this.height - controlsHeight;
+        // 获取controls实际高度
+        const controls = document.querySelector('.controls');
+        this.controlsHeight = controls ? controls.offsetHeight : 70;
     }
 
     handleMove(e) {
@@ -626,9 +626,8 @@ class Game {
                 fruit.vx = -Math.abs(fruit.vx) * WALL_BOUNCE;
             }
             
-            // 底部碰撞 - 使用动态计算的游戏区域高度
-            const controlsHeight = 70;
-            const bottomLimit = this.height - controlsHeight;
+            // 底部碰撞 - 使用controls实际高度
+            const bottomLimit = this.height - (this.controlsHeight || 70);
             if (fruit.y + fruit.radius > bottomLimit) {
                 fruit.y = bottomLimit - fruit.radius;
                 fruit.vy = -Math.abs(fruit.vy) * WALL_BOUNCE;
@@ -649,8 +648,7 @@ class Game {
         }
         
         // 强制底部边界检查 - 防止被挤出去
-        const controlsHeight = 70;
-        const bottomLimit = this.height - controlsHeight;
+        const bottomLimit = this.height - (this.controlsHeight || 70);
         for (const fruit of this.fruits) {
             if (fruit.y + fruit.radius > bottomLimit) {
                 fruit.y = bottomLimit - fruit.radius;
