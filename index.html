@@ -44,6 +44,26 @@
             align-items: center;
         }
         
+        .shake-hint {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            animation: shakeHint 2s ease infinite;
+            z-index: 10;
+        }
+        
+        @keyframes shakeHint {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        
         .title {
             font-size: 20px;
             font-weight: 700;
@@ -222,6 +242,7 @@
         </div>
         
         <div class="game-area">
+            <div class="shake-hint">📱 晃动手机弹飞水果</div>
             <div class="dashed-line"></div>
             <canvas id="gameCanvas"></canvas>
         </div>
