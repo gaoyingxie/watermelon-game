@@ -228,12 +228,17 @@ class Game {
     }
     
     initShakeDetection() {
+        // 防止重复初始化
+        if (this.shakeInitialized) return;
+        this.shakeInitialized = true;
+        
         // 晃动检测参数
-        this.shakeThreshold = 15; // 晃动阈值
+        this.shakeThreshold = 20; // 晃动阈值（提高防止误触）
         this.lastX = 0;
         this.lastY = 0;
         this.lastZ = 0;
         this.shakeCooldown = false;
+        this.shakeListening = false;
         
         // 请求陀螺仪权限（iOS 13+ 需要）
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -257,6 +262,10 @@ class Game {
     }
     
     startShakeListening() {
+        // 防止重复监听
+        if (this.shakeListening) return;
+        this.shakeListening = true;
+        
         // 监听设备运动
         window.addEventListener('devicemotion', (e) => {
             if (this.shakeCooldown || this.gameOver) return;
@@ -278,11 +287,15 @@ class Game {
             // 检测到剧烈晃动
             if (totalDelta > this.shakeThreshold) {
                 this.triggerShake();
+                // 触发后立即重置，防止连续触发
+                this.lastX = x;
+                this.lastY = y;
+                this.lastZ = z;
+            } else {
+                this.lastX = x;
+                this.lastY = y;
+                this.lastZ = z;
             }
-            
-            this.lastX = x;
-            this.lastY = y;
-            this.lastZ = z;
         });
     }
     
