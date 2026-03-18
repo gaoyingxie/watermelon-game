@@ -323,14 +323,18 @@ class Fruit {
                 ctx.fill();
                 break;
                 
-            case 4: // 橙子
+            case 4: // 橙子 - 使用预计算的纹理位置
                 ctx.fillStyle = this.config.darkColor;
-                for (let i = 0; i < 12; i++) {
-                    const a = (i / 12) * Math.PI * 2;
-                    const r = this.radius * (0.4 + (Math.sin(i * 1.5) + 1) * 0.2);
-                    ctx.beginPath();
-                    ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 2, 0, Math.PI * 2);
-                    ctx.fill();
+                if (this.texturePositions) {
+                    for (let i = 0; i < 12 && i < this.texturePositions.length; i++) {
+                        const pos = this.texturePositions[i];
+                        if (pos) {
+                            const r = this.radius * pos.r;
+                            ctx.beginPath();
+                            ctx.arc(Math.cos(pos.angle) * r, Math.sin(pos.angle) * r, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
                 }
                 break;
                 
@@ -377,16 +381,20 @@ class Fruit {
                 }
                 break;
                 
-            case 9: // 椰子
-                for (let i = 0; i < 15; i++) {
-                    const a = (i / 15) * Math.PI * 2 + Math.sin(i * 2);
-                    const r = this.radius * (0.3 + (i % 5) * 0.1);
-                    const x = Math.cos(a) * r;
-                    const y = Math.sin(a) * r;
-                    ctx.beginPath();
-                    ctx.moveTo(x - 2, y - 2);
-                    ctx.lineTo(x + 2, y + 2);
-                    ctx.stroke();
+            case 9: // 椰子 - 使用预计算的纹理位置
+                if (this.texturePositions && this.texturePositions.length > 12) {
+                    for (let i = 12; i < this.texturePositions.length; i++) {
+                        const pos = this.texturePositions[i];
+                        if (pos) {
+                            const r = this.radius * pos.r;
+                            const x = Math.cos(pos.angle) * r;
+                            const y = Math.sin(pos.angle) * r;
+                            ctx.beginPath();
+                            ctx.moveTo(x - 2, y - 2);
+                            ctx.lineTo(x + 2, y + 2);
+                            ctx.stroke();
+                        }
+                    }
                 }
                 break;
                 
