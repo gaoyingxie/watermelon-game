@@ -4,10 +4,7 @@
 
 ## 🎮 在线试玩
 
-| 平台 | 链接 |
-|------|------|
-| **国内（网易云）** | http://nos-jd.163yun.com/jdymusic/h5-games/watermelon-game/index.html |
-| **海外（GitHub）** | https://gaoyingxie.github.io/watermelon-game/ |
+https://gaoyingxie.github.io/watermelon-game/
 
 ## ✨ 游戏特色
 
@@ -15,7 +12,7 @@
 - 📱 **手机晃动**：晃动手机触发物理冲击，弹飞水果
 - 🎨 **独特纹理**：每种水果都有自己的纹理图案
 - ⚡ **连击系统**：多颗水果同时合成有额外奖励
-- 🎯 **双平台部署**：国内访问网易云，海外访问 GitHub
+- 🎯 **陀螺仪支持**：晃动手机触发物理冲击
 
 ## 🕹️ 操作说明
 
