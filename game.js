@@ -146,6 +146,11 @@ class Fruit {
         this.gridX = 0;
         this.gridY = 0;
         
+        // 初始化纹理位置
+        if (!this.texturePositions) {
+            this.texturePositions = this.generateTexturePositions();
+        }
+        
         return this;
     }
     
@@ -897,7 +902,8 @@ class Game {
         if (this.previewFruit && !this.gameOver) {
             this.ctx.save();
             this.ctx.globalAlpha = 0.6;
-            this.previewFruit.x = this.mouseX;
+            this.previewFruit.x = this.mouseX || this.width / 2;
+            this.previewFruit.y = this.previewFruit.radius + 20;
             this.previewFruit.draw(this.ctx);
             this.ctx.restore();
             
@@ -1205,7 +1211,8 @@ class Game {
         if (this.gameOver) return;
         
         if (this.previewFruit) {
-            this.previewFruit.x = this.mouseX;
+            this.previewFruit.x = this.mouseX || this.width / 2;
+            this.previewFruit.y = this.previewFruit.radius + 20;
         }
         
         this.updatePhysics();
