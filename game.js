@@ -33,8 +33,10 @@ class Fruit {
         this.y = y;
         this.vx = 0;
         this.vy = 0;
-        this.radius = FRUITS[type].radius;
-        this.mass = this.radius * this.radius; // 质量与面积成正比
+        this.targetRadius = FRUITS[type].radius;
+        this.radius = 0; // 从0开始缩放动画
+        this.scaleProgress = 0;
+        this.mass = this.targetRadius * this.targetRadius; // 质量与面积成正比
         this.emoji = FRUITS[type].emoji;
         this.color = FRUITS[type].color;
         this.name = FRUITS[type].name;
@@ -44,11 +46,25 @@ class Fruit {
         this.mergeCooldown = 0;
         this.rotation = 0;
         this.rotationSpeed = 0;
+        this.spawnAnimation = !isPreview; // 预览水果不需要入场动画
     }
 
     update() {
         if (this.isPreview) return;
         if (this.mergeCooldown > 0) this.mergeCooldown--;
+
+        // 入场缩放动画
+        if (this.spawnAnimation) {
+            this.scaleProgress += 0.08;
+            if (this.scaleProgress >= 1) {
+                this.scaleProgress = 1;
+                this.spawnAnimation = false;
+            }
+            // 弹性缓出效果
+            const easeOutBack = 1 + 2.70158 * Math.pow(this.scaleProgress - 1, 3) + 
+                               1.70158 * Math.pow(this.scaleProgress - 1, 2);
+            this.radius = this.targetRadius * easeOutBack;
+        }
 
         // 重力
         this.vy += GRAVITY;
@@ -88,6 +104,11 @@ class Fruit {
             ctx.fill();
         }
         
+        // 发光效果（入场动画时更强）
+        const glowIntensity = this.spawnAnimation ? 20 : 8;
+        ctx.shadowBlur = glowIntensity;
+        ctx.shadowColor = this.color;
+        
         // 水果本体（渐变圆形背景）
         const gradient = ctx.createRadialGradient(
             -this.radius * 0.3, -this.radius * 0.3, 0,
@@ -101,6 +122,9 @@ class Fruit {
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
+        
+        // 重置阴影
+        ctx.shadowBlur = 0;
         
         // 每种水果独特的纹理和边框
         this.drawFruitPattern(ctx);
@@ -274,31 +298,105 @@ class Fruit {
 }
 
 class Particle {
-    constructor(x, y, color) {
+    constructor(x, y, color, type = 'normal') {
         this.x = x;
         this.y = y;
-        this.vx = (Math.random() - 0.5) * 8;
-        this.vy = (Math.random() - 0.5) * 8;
+        this.type = type;
         this.life = 1.0;
         this.color = color;
-        this.size = Math.random() * 6 + 3;
+        
+        if (type === 'sparkle') {
+            // 闪烁粒子 - 用于合并特效
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 12 + 4;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.size = Math.random() * 4 + 2;
+            this.decay = 0.025;
+            this.gravity = 0.15;
+        } else if (type === 'star') {
+            // 星星粒子
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 6 + 2;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.size = Math.random() * 8 + 4;
+            this.decay = 0.02;
+            this.gravity = 0.1;
+            this.rotation = Math.random() * Math.PI * 2;
+            this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+        } else {
+            // 普通粒子
+            this.vx = (Math.random() - 0.5) * 8;
+            this.vy = (Math.random() - 0.5) * 8;
+            this.size = Math.random() * 6 + 3;
+            this.decay = 0.02;
+            this.gravity = 0.2;
+        }
     }
 
     update() {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += 0.2;
-        this.life -= 0.02;
+        this.vy += this.gravity;
+        this.life -= this.decay;
+        
+        if (this.type === 'star') {
+            this.rotation += this.rotationSpeed;
+        }
     }
 
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = this.life;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.translate(this.x, this.y);
+        
+        if (this.type === 'star') {
+            // 绘制星星
+            ctx.rotate(this.rotation);
+            ctx.fillStyle = this.color;
+            this.drawStar(ctx, 0, 0, 5, this.size, this.size * 0.5);
+        } else if (this.type === 'sparkle') {
+            // 绘制闪烁点
+            ctx.fillStyle = this.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // 普通圆点
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
         ctx.restore();
+    }
+    
+    drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+        let rot = Math.PI / 2 * 3;
+        let x = cx;
+        let y = cy;
+        let step = Math.PI / spikes;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            ctx.lineTo(x, y);
+            rot += step;
+
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            ctx.lineTo(x, y);
+            rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        ctx.fill();
     }
 }
 
@@ -744,11 +842,8 @@ class Game {
             type: newType
         });
         
-        // 粒子效果（根据合并数量调整）
-        const particleCount = 8 + count * 4;
-        for (let i = 0; i < particleCount; i++) {
-            this.particles.push(new Particle(newX, newY, FRUITS[newType].color));
-        }
+        // 炫酷粒子效果
+        this.createParticles(newX, newY, FRUITS[newType].color, count);
         
         // 加分：基础分 + 连击奖励（2个就有奖励）
         const baseScore = FRUITS[newType].score;
@@ -869,9 +964,19 @@ class Game {
         doShake();
     }
 
-    createParticles(x, y, color) {
-        for (let i = 0; i < 12; i++) {
-            this.particles.push(new Particle(x, y, color));
+    createParticles(x, y, color, count = 1) {
+        // 根据合并数量调整粒子数量
+        const particleCount = 8 + count * 6;
+        
+        // 闪烁粒子
+        for (let i = 0; i < particleCount; i++) {
+            this.particles.push(new Particle(x, y, color, 'sparkle'));
+        }
+        
+        // 星星粒子（更多合并 = 更多星星）
+        const starCount = count >= 3 ? 8 : 4;
+        for (let i = 0; i < starCount; i++) {
+            this.particles.push(new Particle(x, y, '#ffd700', 'star'));
         }
     }
 
