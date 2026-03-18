@@ -296,32 +296,88 @@ class Game {
         f2.rotationSpeed += (Math.random() - 0.5) * 0.1;
     }
 
-    tryMerge(f1, f2) {
-        // 检查是否可以合并
-        if (f1.type !== f2.type) return false;
-        if (f1.merged || f2.merged) return false;
-        if (f1.mergeCooldown > 0 || f2.mergeCooldown > 0) return false;
-        if (f1.type >= FRUITS.length - 1) return false; // 已经是最大水果
+    // 查找所有相连的相同水果（使用并查集/连通分量）
+    findMergeGroups() {
+        const n = this.fruits.length;
+        const parent = Array(n).fill(0).map((_, i) => i);
         
-        const dx = f2.x - f1.x;
-        const dy = f2.y - f1.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const find = (x) => {
+            if (parent[x] !== x) parent[x] = find(parent[x]);
+            return parent[x];
+        };
         
-        // 只有真正接触才合并
-        if (dist > f1.radius + f2.radius - 2) return false;
+        const union = (x, y) => {
+            parent[find(x)] = find(y);
+        };
         
-        // 标记为已合并
-        f1.merged = true;
-        f2.merged = true;
+        // 找到所有接触的相同水果对
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const f1 = this.fruits[i];
+                const f2 = this.fruits[j];
+                
+                if (f1.type !== f2.type) continue;
+                if (f1.merged || f2.merged) continue;
+                if (f1.mergeCooldown > 0 || f2.mergeCooldown > 0) continue;
+                
+                const dx = f2.x - f1.x;
+                const dy = f2.y - f1.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // 接触判定（留一点容差）
+                if (dist <= f1.radius + f2.radius - 1) {
+                    union(i, j);
+                }
+            }
+        }
         
-        // 创建新水果（在中间位置）
-        const newX = (f1.x + f2.x) / 2;
-        const newY = (f1.y + f2.y) / 2;
-        const newFruit = new Fruit(f1.type + 1, newX, newY);
+        // 按根节点分组
+        const groups = new Map();
+        for (let i = 0; i < n; i++) {
+            if (this.fruits[i].merged || this.fruits[i].mergeCooldown > 0) continue;
+            const root = find(i);
+            if (!groups.has(root)) groups.set(root, []);
+            groups.get(root).push(i);
+        }
         
-        // 继承部分速度
-        newFruit.vx = (f1.vx + f2.vx) / 2 * 0.5;
-        newFruit.vy = (f1.vy + f2.vy) / 2 * 0.5;
+        // 只返回大小>=2的组
+        return Array.from(groups.values()).filter(g => g.length >= 2);
+    }
+
+    // 合并一组水果
+    mergeGroup(indices) {
+        if (indices.length < 2) return false;
+        
+        const firstFruit = this.fruits[indices[0]];
+        const type = firstFruit.type;
+        
+        if (type >= FRUITS.length - 1) return false; // 已经是最大水果
+        
+        // 标记所有水果为已合并
+        let totalX = 0, totalY = 0;
+        let totalVx = 0, totalVy = 0;
+        
+        for (const idx of indices) {
+            const f = this.fruits[idx];
+            f.merged = true;
+            totalX += f.x;
+            totalY += f.y;
+            totalVx += f.vx;
+            totalVy += f.vy;
+        }
+        
+        const count = indices.length;
+        const newX = totalX / count;
+        const newY = totalY / count;
+        
+        // 计算升级等级：2个升1级，3个升2级，4个升3级...
+        const levelUp = Math.min(count - 1, FRUITS.length - 1 - type);
+        const newType = type + levelUp;
+        
+        // 创建新水果
+        const newFruit = new Fruit(newType, newX, newY);
+        newFruit.vx = (totalVx / count) * 0.5;
+        newFruit.vy = (totalVy / count) * 0.5;
         newFruit.mergeCooldown = MERGE_COOLDOWN;
         
         // 添加到合并队列
@@ -329,17 +385,66 @@ class Game {
             newFruit,
             x: newX,
             y: newY,
-            type: f1.type + 1
+            type: newType
         });
         
-        // 粒子效果
-        this.createParticles(newX, newY, FRUITS[f1.type + 1].color);
+        // 粒子效果（根据合并数量调整）
+        const particleCount = 8 + count * 4;
+        for (let i = 0; i < particleCount; i++) {
+            this.particles.push(new Particle(newX, newY, FRUITS[newType].color));
+        }
         
-        // 加分
-        this.score += FRUITS[f1.type + 1].score;
+        // 加分：基础分 + 连击奖励
+        const baseScore = FRUITS[newType].score;
+        const comboBonus = count >= 3 ? (count - 2) * FRUITS[newType].score : 0;
+        this.score += baseScore + comboBonus;
         this.updateScore();
         
+        // 显示连击文字效果（如果3个或以上）
+        if (count >= 3) {
+            this.showComboText(newX, newY, count);
+        }
+        
         return true;
+    }
+
+    // 显示连击文字
+    showComboText(x, y, count) {
+        // 创建临时DOM元素显示连击
+        const container = document.querySelector('.game-area');
+        const el = document.createElement('div');
+        el.style.cssText = `
+            position: absolute;
+            left: ${x}px;
+            top: ${y}px;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            pointer-events: none;
+            animation: comboPop 1s ease-out forwards;
+            z-index: 50;
+        `;
+        el.textContent = `${count}连击! +${(count-2)*100}%`;
+        
+        // 添加动画样式
+        if (!document.getElementById('comboAnim')) {
+            const style = document.createElement('style');
+            style.id = 'comboAnim';
+            style.textContent = `
+                @keyframes comboPop {
+                    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                    20% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+                    80% { transform: translate(-50%, -80%) scale(1); opacity: 1; }
+                    100% { transform: translate(-50%, -100%) scale(0.8); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
     }
 
     createParticles(x, y, color) {
@@ -413,19 +518,10 @@ class Game {
             }
         }
         
-        // 合并检测（一轮）
-        let merged = true;
-        while (merged) {
-            merged = false;
-            for (let i = 0; i < this.fruits.length; i++) {
-                for (let j = i + 1; j < this.fruits.length; j++) {
-                    if (this.tryMerge(this.fruits[i], this.fruits[j])) {
-                        merged = true;
-                        break;
-                    }
-                }
-                if (merged) break;
-            }
+        // 合并检测：查找并合并所有相连的相同水果组
+        const mergeGroups = this.findMergeGroups();
+        for (const group of mergeGroups) {
+            this.mergeGroup(group);
         }
         
         // 处理合并队列
