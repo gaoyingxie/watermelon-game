@@ -239,6 +239,17 @@ class Game {
         this.lastZ = 0;
         this.shakeCooldown = false;
         this.shakeListening = false;
+        this.shakeCooldownTime = 5000; // 5秒CD
+        
+        // PC端点击提示触发
+        const shakeHint = document.querySelector('.shake-hint');
+        if (shakeHint) {
+            shakeHint.style.cursor = 'pointer';
+            shakeHint.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.triggerShake();
+            });
+        }
         
         // 请求陀螺仪权限（iOS 13+ 需要）
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -300,6 +311,8 @@ class Game {
     }
     
     triggerShake() {
+        if (this.shakeCooldown || this.gameOver) return;
+        
         this.shakeCooldown = true;
         
         // 给所有水果随机冲击力
@@ -315,10 +328,33 @@ class Game {
         // 显示晃动效果文字
         this.showShakeText();
         
-        // 1秒冷却
+        // 更新UI显示CD
+        this.updateShakeHintCD();
+        
+        // 5秒冷却
         setTimeout(() => {
             this.shakeCooldown = false;
-        }, 1000);
+            this.updateShakeHintReady();
+        }, this.shakeCooldownTime);
+    }
+    
+    updateShakeHintCD() {
+        const shakeHint = document.querySelector('.shake-hint');
+        if (shakeHint) {
+            shakeHint.style.opacity = '0.5';
+            shakeHint.style.animation = 'none';
+            shakeHint.textContent = '⏳ 冷却中 (5s)';
+        }
+    }
+    
+    updateShakeHintReady() {
+        const shakeHint = document.querySelector('.shake-hint');
+        if (shakeHint) {
+            shakeHint.style.opacity = '1';
+            shakeHint.style.animation = 'shakeHint 2s ease infinite';
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            shakeHint.textContent = isMobile ? '📱 晃动手机弹飞水果' : '🖱️ 点击弹飞水果';
+        }
     }
     
     showShakeText() {
@@ -898,6 +934,8 @@ class Game {
         this.mergeQueue = [];
         this.lastDropTime = 0;
         this.isPointerDown = false;
+        this.shakeCooldown = false;
+        this.updateShakeHintReady();
         this.updateScore();
         this.updatePreview();
         document.getElementById('gameOver').classList.remove('show');
