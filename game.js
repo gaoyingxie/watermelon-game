@@ -251,11 +251,11 @@ class Game {
     }
 
     updatePreview() {
-        // 预览显示当前即将发射的水果
-        document.getElementById('preview').textContent = FRUITS[this.currentFruitType].emoji;
-        document.getElementById('preview').style.background = FRUITS[this.currentFruitType].color + '40';
+        // 底栏预览显示下一个水果
+        document.getElementById('preview').textContent = FRUITS[this.nextFruitType].emoji;
+        document.getElementById('preview').style.background = FRUITS[this.nextFruitType].color + '40';
         
-        // 更新预览水果位置
+        // 画布预览显示当前准备发射的水果
         if (this.previewFruit) {
             this.previewFruit.type = this.currentFruitType;
             this.previewFruit.radius = FRUITS[this.currentFruitType].radius;
