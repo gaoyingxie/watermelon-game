@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>合成大西瓜 🍉</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #d299c2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            padding: 16px 20px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .score-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .game-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .preview-bar {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .preview-fruit {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            animation: bounce 1s ease infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .dashed-line {
+            position: absolute;
+            top: 100px;
+            left: 0;
+            right: 0;
+            border-top: 3px dashed #ff6b6b;
+            opacity: 0.6;
+        }
+        
+        .dashed-line::before {
+            content: '⚠️ 警戒线';
+            position: absolute;
+            right: 10px;
+            top: -22px;
+            font-size: 11px;
+            color: #ff6b6b;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            padding: 16px 20px;
+            background: white;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.96);
+        }
+        
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #5f6368;
+        }
+        
+        .btn-secondary:active {
+            background: #e8eaed;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+        }
+        
+        .game-over.show {
+            display: flex;
+        }
+        
+        .game-over h2 {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        
+        .final-score {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .high-score {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 32px;
+        }
+        
+        .fruit-label {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="title">🍉 合成大西瓜</div>
+            <div class="score-box">💎 <span id="score">0</span></div>
+        </div>
+        
+        <div class="game-area">
+            <div class="preview-bar">
+                <span>下一个</span>
+                <div class="preview-fruit" id="preview">🫐</div>
+            </div>
+            <div class="dashed-line"></div>
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="game.dropFruit()">⬇️ 放置</button>
+            <button class="btn btn-primary" onclick="game.reset()">🔄 重新开始</button>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>游戏结束 🎮</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <div class="high-score">最高分: <span id="highScore">0</span></div>
+            <button class="btn btn-primary" onclick="game.reset()" style="width: 200px;">再玩一次</button>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
