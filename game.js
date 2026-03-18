@@ -212,6 +212,9 @@ class Game {
         
         this.updatePreview();
         this.loop();
+        
+        // 初始化陀螺仪晃动检测
+        this.initShakeDetection();
     }
 
     resize() {
@@ -222,9 +225,123 @@ class Game {
         this.canvas.height = rect.height;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
+    }
+    
+    initShakeDetection() {
+        // 晃动检测参数
+        this.shakeThreshold = 15; // 晃动阈值
+        this.lastX = 0;
+        this.lastY = 0;
+        this.lastZ = 0;
+        this.shakeCooldown = false;
         
-        // 调试：在画布底部画一条红线标记边界
-        this.debugBoundary = true;
+        // 请求陀螺仪权限（iOS 13+ 需要）
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 需要用户交互后才能请求权限
+            const requestPermission = () => {
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            this.startShakeListening();
+                        }
+                    })
+                    .catch(console.error);
+            };
+            
+            // 点击canvas时请求权限
+            this.canvas.addEventListener('click', requestPermission, { once: true });
+        } else {
+            // 安卓或其他设备直接监听
+            this.startShakeListening();
+        }
+    }
+    
+    startShakeListening() {
+        // 监听设备运动
+        window.addEventListener('devicemotion', (e) => {
+            if (this.shakeCooldown || this.gameOver) return;
+            
+            const acceleration = e.accelerationIncludingGravity;
+            if (!acceleration) return;
+            
+            const x = acceleration.x || 0;
+            const y = acceleration.y || 0;
+            const z = acceleration.z || 0;
+            
+            // 计算加速度变化
+            const deltaX = Math.abs(x - this.lastX);
+            const deltaY = Math.abs(y - this.lastY);
+            const deltaZ = Math.abs(z - this.lastZ);
+            
+            const totalDelta = deltaX + deltaY + deltaZ;
+            
+            // 检测到剧烈晃动
+            if (totalDelta > this.shakeThreshold) {
+                this.triggerShake();
+            }
+            
+            this.lastX = x;
+            this.lastY = y;
+            this.lastZ = z;
+        });
+    }
+    
+    triggerShake() {
+        this.shakeCooldown = true;
+        
+        // 给所有水果随机冲击力
+        for (const fruit of this.fruits) {
+            // 水平随机力
+            fruit.vx += (Math.random() - 0.5) * 20;
+            // 向上弹跳
+            fruit.vy -= Math.random() * 15 + 5;
+            // 随机旋转
+            fruit.rotationSpeed += (Math.random() - 0.5) * 0.5;
+        }
+        
+        // 显示晃动效果文字
+        this.showShakeText();
+        
+        // 1秒冷却
+        setTimeout(() => {
+            this.shakeCooldown = false;
+        }, 1000);
+    }
+    
+    showShakeText() {
+        const container = document.querySelector('.game-area');
+        const el = document.createElement('div');
+        el.style.cssText = `
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: 900;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px #ff6b6b, 2px 2px 4px rgba(0,0,0,0.3);
+            pointer-events: none;
+            animation: shakePop 0.8s ease-out forwards;
+            z-index: 100;
+        `;
+        el.textContent = '💥 晃动冲击!';
+        
+        // 添加动画样式
+        if (!document.getElementById('shakeAnim')) {
+            const style = document.createElement('style');
+            style.id = 'shakeAnim';
+            style.textContent = `
+                @keyframes shakePop {
+                    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                    30% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+                    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 800);
     }
 
     handleMove(e) {
