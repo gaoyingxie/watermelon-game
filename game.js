@@ -47,6 +47,26 @@ class Fruit {
         this.rotation = 0;
         this.rotationSpeed = 0;
         this.spawnAnimation = !isPreview; // 预览水果不需要入场动画
+        
+        // 生成固定的纹理位置，避免抖动
+        this.texturePositions = this.generateTexturePositions();
+    }
+    
+    generateTexturePositions() {
+        const positions = [];
+        // 为橙子(type 4)生成12个固定的小点位置
+        for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            const r = 0.4 + (Math.sin(i * 1.5) + 1) * 0.2; // 伪随机但固定
+            positions.push({ angle, r });
+        }
+        // 为椰子(type 9)生成15条固定短线
+        for (let i = 0; i < 15; i++) {
+            const angle = (i / 15) * Math.PI * 2 + Math.sin(i * 2);
+            const r = 0.3 + (i % 5) * 0.1;
+            positions.push({ angle, r });
+        }
+        return positions;
     }
 
     update() {
@@ -196,12 +216,12 @@ class Fruit {
             case 3: // 番茄 - 光滑无纹理
                 break;
                 
-            case 4: // 橙子 - 橘皮纹理（小点）
+            case 4: // 橙子 - 橘皮纹理（小点）- 使用固定位置避免抖动
                 for (let i = 0; i < 12; i++) {
-                    const angle = (i / 12) * Math.PI * 2;
-                    const r = this.radius * (0.4 + Math.random() * 0.4);
+                    const pos = this.texturePositions[i];
+                    const r = this.radius * pos.r;
                     ctx.beginPath();
-                    ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, 2, 0, Math.PI * 2);
+                    ctx.arc(Math.cos(pos.angle) * r, Math.sin(pos.angle) * r, 2, 0, Math.PI * 2);
                     ctx.fillStyle = this.darkenColor(this.color, 20);
                     ctx.fill();
                 }
@@ -250,12 +270,12 @@ class Fruit {
                 }
                 break;
                 
-            case 9: // 椰子 - 毛糙纹理（随机短线）
+            case 9: // 椰子 - 毛糙纹理（固定短线）- 使用固定位置避免抖动
                 for (let i = 0; i < 15; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const r = this.radius * (0.3 + Math.random() * 0.5);
-                    const x = Math.cos(angle) * r;
-                    const y = Math.sin(angle) * r;
+                    const pos = this.texturePositions[12 + i]; // 跳过橙子的12个位置
+                    const r = this.radius * pos.r;
+                    const x = Math.cos(pos.angle) * r;
+                    const y = Math.sin(pos.angle) * r;
                     ctx.beginPath();
                     ctx.moveTo(x - 2, y - 2);
                     ctx.lineTo(x + 2, y + 2);
