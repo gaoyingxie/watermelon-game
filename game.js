@@ -573,19 +573,32 @@ class Game {
     }
 
     checkGameOver() {
+        // 检查是否超出顶部
+        for (const fruit of this.fruits) {
+            if (fruit.y + fruit.radius < 0 && !fruit.isPreview) {
+                this.triggerGameOver();
+                return;
+            }
+        }
+        
+        // 检查警戒线（水果静止时超过警戒线）
         for (const fruit of this.fruits) {
             if (fruit.y - fruit.radius < this.dropLine && 
                 Math.abs(fruit.vy) < 0.5 && 
                 Math.abs(fruit.vx) < 0.5 &&
                 !fruit.isPreview &&
                 fruit.y > fruit.radius * 2) {
-                this.gameOver = true;
-                document.getElementById('finalScore').textContent = this.score;
-                document.getElementById('highScore').textContent = this.highScore;
-                document.getElementById('gameOver').classList.add('show');
+                this.triggerGameOver();
                 return;
             }
         }
+    }
+    
+    triggerGameOver() {
+        this.gameOver = true;
+        document.getElementById('finalScore').textContent = this.score;
+        document.getElementById('highScore').textContent = this.highScore;
+        document.getElementById('gameOver').classList.add('show');
     }
 
     update() {
@@ -609,8 +622,8 @@ class Game {
                 fruit.vx = -Math.abs(fruit.vx) * WALL_BOUNCE;
             }
             
-            // 底部碰撞（留出controls区域，约70px）
-            const bottomLimit = this.height - 70;
+            // 底部碰撞 - 停在白色游戏区域底部（紧贴controls上方）
+            const bottomLimit = this.height - 5; // 只留5px边距
             if (fruit.y + fruit.radius > bottomLimit) {
                 fruit.y = bottomLimit - fruit.radius;
                 fruit.vy = -Math.abs(fruit.vy) * WALL_BOUNCE;
