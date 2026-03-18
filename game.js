@@ -102,9 +102,12 @@ class Fruit {
         ctx.fillStyle = gradient;
         ctx.fill();
         
+        // 每种水果独特的纹理和边框
+        this.drawFruitPattern(ctx);
+        
         // 边框
-        ctx.strokeStyle = this.darkenColor(this.color, 30);
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = this.darkenColor(this.color, 40);
+        ctx.lineWidth = 2.5;
         ctx.stroke();
         
         // 高光
@@ -112,14 +115,141 @@ class Fruit {
         ctx.ellipse(-this.radius * 0.3, -this.radius * 0.3, 
                     this.radius * 0.25, this.radius * 0.15, 
                     -Math.PI / 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
         ctx.fill();
         
         // Emoji
-        ctx.font = `${this.radius * 1.2}px Arial`;
+        ctx.font = `${this.radius * 1.1}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(this.emoji, 0, this.radius * 0.1);
+        ctx.fillText(this.emoji, 0, this.radius * 0.05);
+        
+        ctx.restore();
+    }
+    
+    drawFruitPattern(ctx) {
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = this.darkenColor(this.color, 20);
+        ctx.lineWidth = 1.5;
+        
+        switch(this.type) {
+            case 0: // 蓝莓 - 小点纹理
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    const r = this.radius * 0.6;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = this.darkenColor(this.color, 30);
+                    ctx.fill();
+                }
+                break;
+                
+            case 1: // 柠檬 - 放射状纹理
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(angle) * this.radius * 0.8, Math.sin(angle) * this.radius * 0.8);
+                }
+                ctx.stroke();
+                break;
+                
+            case 2: // 猕猴桃 - 放射状+中心
+                ctx.beginPath();
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(angle) * this.radius * 0.7, Math.sin(angle) * this.radius * 0.7);
+                }
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 0.2, 0, Math.PI * 2);
+                ctx.fillStyle = this.darkenColor(this.color, 30);
+                ctx.fill();
+                break;
+                
+            case 3: // 番茄 - 光滑无纹理
+                break;
+                
+            case 4: // 橙子 - 橘皮纹理（小点）
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2;
+                    const r = this.radius * (0.4 + Math.random() * 0.4);
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = this.darkenColor(this.color, 20);
+                    ctx.fill();
+                }
+                break;
+                
+            case 5: // 苹果 - 苹果梗
+                ctx.strokeStyle = '#5d4037';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, -this.radius * 0.6);
+                ctx.quadraticCurveTo(3, -this.radius * 0.8, 5, -this.radius * 0.9);
+                ctx.stroke();
+                break;
+                
+            case 6: // 梨 - 梨形纹理
+                ctx.beginPath();
+                ctx.ellipse(0, this.radius * 0.2, this.radius * 0.3, this.radius * 0.5, 0, 0, Math.PI * 2);
+                ctx.strokeStyle = this.lightenColor(this.color, 20);
+                ctx.stroke();
+                break;
+                
+            case 7: // 桃子 - 桃沟纹理
+                ctx.beginPath();
+                ctx.moveTo(0, -this.radius * 0.8);
+                ctx.quadraticCurveTo(-this.radius * 0.3, 0, 0, this.radius * 0.8);
+                ctx.moveTo(0, -this.radius * 0.8);
+                ctx.quadraticCurveTo(this.radius * 0.3, 0, 0, this.radius * 0.8);
+                ctx.strokeStyle = this.darkenColor(this.color, 25);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                break;
+                
+            case 8: // 菠萝 - 菱形纹理
+                for (let row = -1; row <= 1; row++) {
+                    for (let col = -1; col <= 1; col++) {
+                        const x = col * this.radius * 0.4;
+                        const y = row * this.radius * 0.4;
+                        ctx.beginPath();
+                        ctx.moveTo(x, y - 5);
+                        ctx.lineTo(x + 5, y);
+                        ctx.lineTo(x, y + 5);
+                        ctx.lineTo(x - 5, y);
+                        ctx.closePath();
+                        ctx.stroke();
+                    }
+                }
+                break;
+                
+            case 9: // 椰子 - 毛糙纹理（随机短线）
+                for (let i = 0; i < 15; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = this.radius * (0.3 + Math.random() * 0.5);
+                    const x = Math.cos(angle) * r;
+                    const y = Math.sin(angle) * r;
+                    ctx.beginPath();
+                    ctx.moveTo(x - 2, y - 2);
+                    ctx.lineTo(x + 2, y + 2);
+                    ctx.stroke();
+                }
+                break;
+                
+            case 10: // 西瓜 - 条纹纹理
+                ctx.strokeStyle = '#1b5e20';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i / 5) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * (0.5 + i * 0.1), angle, angle + Math.PI);
+                    ctx.stroke();
+                }
+                break;
+        }
         
         ctx.restore();
     }
