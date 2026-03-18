@@ -625,7 +625,7 @@ class Game {
         }
         
         // 多轮碰撞处理（增加迭代次数让堆叠更稳定）
-        for (let iteration = 0; iteration < 5; iteration++) {
+        for (let iteration = 0; iteration < 10; iteration++) {
             for (let i = 0; i < this.fruits.length; i++) {
                 for (let j = i + 1; j < this.fruits.length; j++) {
                     if (this.checkCircleCollision(this.fruits[i], this.fruits[j])) {
@@ -633,6 +633,33 @@ class Game {
                     }
                 }
             }
+        }
+        
+        // 强制位置修正 - 确保没有重叠
+        for (let safety = 0; safety < 5; safety++) {
+            let hasOverlap = false;
+            for (let i = 0; i < this.fruits.length; i++) {
+                for (let j = i + 1; j < this.fruits.length; j++) {
+                    const f1 = this.fruits[i];
+                    const f2 = this.fruits[j];
+                    const dx = f2.x - f1.x;
+                    const dy = f2.y - f1.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const minDist = f1.radius + f2.radius;
+                    
+                    if (dist < minDist && dist > 0) {
+                        hasOverlap = true;
+                        const overlap = minDist - dist;
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        f1.x -= nx * overlap * 0.5;
+                        f1.y -= ny * overlap * 0.5;
+                        f2.x += nx * overlap * 0.5;
+                        f2.y += ny * overlap * 0.5;
+                    }
+                }
+            }
+            if (!hasOverlap) break;
         }
         
         // 强制底部边界检查 - 防止被挤出去
