@@ -856,7 +856,20 @@ class Game {
         // 显示连击文字效果（2个及以上都显示）
         this.showComboText(newX, newY, count, totalScore - baseScore);
         
+        // 如果合成的是西瓜，触发胜利
+        if (newType === FRUITS.length - 1) {
+            this.triggerVictory();
+        }
+        
         return true;
+    }
+    
+    triggerVictory() {
+        this.gameOver = true;
+        document.getElementById('finalScore').textContent = this.score;
+        document.getElementById('highScore').textContent = this.highScore;
+        document.getElementById('gameOverTitle').textContent = '🎉 游戏胜利！';
+        document.getElementById('gameOver').classList.add('show');
     }
 
     // 显示连击文字 - 更炫的特效
@@ -1204,6 +1217,7 @@ class Game {
         this.updateShakeHintReady();
         this.updateScore();
         this.updatePreview();
+        document.getElementById('gameOverTitle').textContent = '游戏结束 🎮';
         document.getElementById('gameOver').classList.remove('show');
     }
 }
