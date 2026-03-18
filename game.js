@@ -67,10 +67,10 @@ class Fruit {
         
         // 旋转（增强阻尼，防止无限旋转）
         this.rotation += this.rotationSpeed;
-        this.rotationSpeed *= 0.85; // 更快的衰减
+        this.rotationSpeed *= 0.75; // 更强的衰减
         
         // 速度很慢时停止旋转
-        if (Math.abs(this.rotationSpeed) < 0.01) {
+        if (Math.abs(this.rotationSpeed) < 0.02) {
             this.rotationSpeed = 0;
         }
     }
@@ -644,9 +644,12 @@ class Game {
         f2.vx += impulseX / f2.mass;
         f2.vy += impulseY / f2.mass;
         
-        // 添加一点随机旋转
-        f1.rotationSpeed += (Math.random() - 0.5) * 0.1;
-        f2.rotationSpeed += (Math.random() - 0.5) * 0.1;
+        // 只有在相对速度较大时才添加少量旋转
+        const relativeSpeed = Math.sqrt(dvx * dvx + dvy * dvy);
+        if (relativeSpeed > 3) {
+            f1.rotationSpeed += (Math.random() - 0.5) * 0.03;
+            f2.rotationSpeed += (Math.random() - 0.5) * 0.03;
+        }
     }
 
     // 查找所有相连的相同水果（使用并查集/连通分量）
