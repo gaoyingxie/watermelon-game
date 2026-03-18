@@ -324,8 +324,8 @@ class Game {
                 const dy = f2.y - f1.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 
-                // 接触判定（留一点容差）
-                if (dist <= f1.radius + f2.radius - 1) {
+                // 接触判定（放宽容差，确保并排的也能检测到）
+                if (dist <= f1.radius + f2.radius + 2) {
                     union(i, j);
                 }
             }
@@ -518,18 +518,43 @@ class Game {
             }
         }
         
-        // 合并检测：查找并合并所有相连的相同水果组
-        const mergeGroups = this.findMergeGroups();
-        for (const group of mergeGroups) {
-            this.mergeGroup(group);
+        // 合并检测：循环处理直到没有新的合并（处理连锁反应）
+        let hasMerged = true;
+        let mergeIterations = 0;
+        const MAX_MERGE_ITERATIONS = 5; // 防止无限循环
+        
+        while (hasMerged && mergeIterations < MAX_MERGE_ITERATIONS) {
+            hasMerged = false;
+            mergeIterations++;
+            
+            // 先处理当前队列中的合并
+            if (this.mergeQueue.length > 0) {
+                this.fruits = this.fruits.filter(f => !f.merged);
+                for (const merge of this.mergeQueue) {
+                    this.fruits.push(merge.newFruit);
+                }
+                this.mergeQueue = [];
+                hasMerged = true;
+            }
+            
+            // 查找新的合并组
+            const mergeGroups = this.findMergeGroups();
+            if (mergeGroups.length > 0) {
+                for (const group of mergeGroups) {
+                    this.mergeGroup(group);
+                }
+                hasMerged = true;
+            }
         }
         
-        // 处理合并队列
-        this.fruits = this.fruits.filter(f => !f.merged);
-        for (const merge of this.mergeQueue) {
-            this.fruits.push(merge.newFruit);
+        // 最终处理剩余的合并队列
+        if (this.mergeQueue.length > 0) {
+            this.fruits = this.fruits.filter(f => !f.merged);
+            for (const merge of this.mergeQueue) {
+                this.fruits.push(merge.newFruit);
+            }
+            this.mergeQueue = [];
         }
-        this.mergeQueue = [];
         
         // 更新粒子
         this.particles = this.particles.filter(p => {
