@@ -65,9 +65,14 @@ class Fruit {
         this.vx *= FRICTION;
         this.vy *= FRICTION;
         
-        // 旋转
+        // 旋转（增强阻尼，防止无限旋转）
         this.rotation += this.rotationSpeed;
-        this.rotationSpeed *= 0.95;
+        this.rotationSpeed *= 0.85; // 更快的衰减
+        
+        // 速度很慢时停止旋转
+        if (Math.abs(this.rotationSpeed) < 0.01) {
+            this.rotationSpeed = 0;
+        }
     }
 
     draw(ctx) {
