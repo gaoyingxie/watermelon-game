@@ -569,9 +569,10 @@ class Game {
                 fruit.vx = -Math.abs(fruit.vx) * WALL_BOUNCE;
             }
             
-            // 底部碰撞
-            if (fruit.y + fruit.radius > this.height) {
-                fruit.y = this.height - fruit.radius;
+            // 底部碰撞（留出controls区域，约70px）
+            const bottomLimit = this.height - 70;
+            if (fruit.y + fruit.radius > bottomLimit) {
+                fruit.y = bottomLimit - fruit.radius;
                 fruit.vy = -Math.abs(fruit.vy) * WALL_BOUNCE;
                 // 底部摩擦力
                 fruit.vx *= 0.9;
