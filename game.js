@@ -85,9 +85,10 @@ class ObjectPool {
         this.available = [];
         this.inUse = new Set();
         
-        // 预创建对象
+        // 预创建对象 - 不传参数，让构造函数自己初始化默认值
         for (let i = 0; i < initialSize; i++) {
-            this.available.push(this.createFn());
+            const obj = this.createFn();
+            this.available.push(obj);
         }
     }
     
@@ -114,10 +115,20 @@ class ObjectPool {
 // ==================== 水果类 ====================
 class Fruit {
     constructor() {
-        this.reset();
+        this.type = 0;
+        this.x = 0;
+        this.y = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.radius = 0;
+        this.rotation = 0;
+        this.rotationSpeed = 0;
+        this.merged = false;
+        this.texturePositions = null;
     }
     
-    reset(type, x, y, isPreview = false) {
+    reset(type = 0, x = 0, y = 0, isPreview = false) {
+        if (type < 0 || type >= CONFIG.FRUITS.length) type = 0;
         const config = Utils.getFruitConfig(type);
         
         this.type = type;
