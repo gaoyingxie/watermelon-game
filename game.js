@@ -394,57 +394,123 @@ class Game {
             this.particles.push(new Particle(newX, newY, FRUITS[newType].color));
         }
         
-        // 加分：基础分 + 连击奖励
+        // 加分：基础分 + 连击奖励（2个就有奖励）
         const baseScore = FRUITS[newType].score;
-        const comboBonus = count >= 3 ? (count - 2) * FRUITS[newType].score : 0;
-        this.score += baseScore + comboBonus;
+        // 连击奖励：2个+50%，3个+100%，4个+150%，以此类推
+        const comboMultiplier = 1 + (count - 1) * 0.5;
+        const totalScore = Math.floor(baseScore * comboMultiplier);
+        this.score += totalScore;
         this.updateScore();
         
-        // 显示连击文字效果（如果3个或以上）
-        if (count >= 3) {
-            this.showComboText(newX, newY, count);
-        }
+        // 显示连击文字效果（2个及以上都显示）
+        this.showComboText(newX, newY, count, totalScore - baseScore);
         
         return true;
     }
 
-    // 显示连击文字
-    showComboText(x, y, count) {
-        // 创建临时DOM元素显示连击
+    // 显示连击文字 - 更炫的特效
+    showComboText(x, y, count, bonus) {
         const container = document.querySelector('.game-area');
+        
+        // 连击标签
+        const comboLabels = ['', '', 'DOUBLE!', 'TRIPLE!', 'QUADRA!', 'PENTA!', 'HEXA!'];
+        const label = comboLabels[count] || `${count} COMBO!`;
+        
+        // 主连击文字
         const el = document.createElement('div');
+        const colors = ['', '', '#ff9800', '#f44336', '#9c27b0', '#3f51b5', '#00bcd4'];
+        const color = colors[count] || '#ff5722';
+        
         el.style.cssText = `
             position: absolute;
             left: ${x}px;
             top: ${y}px;
             transform: translate(-50%, -50%);
-            font-size: 24px;
-            font-weight: bold;
-            color: #ff6b6b;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: ${18 + count * 4}px;
+            font-weight: 900;
+            color: ${color};
+            text-shadow: 
+                0 0 10px ${color}80,
+                0 0 20px ${color}60,
+                2px 2px 4px rgba(0,0,0,0.3);
             pointer-events: none;
-            animation: comboPop 1s ease-out forwards;
-            z-index: 50;
+            animation: comboBoom 1.2s ease-out forwards;
+            z-index: 100;
+            font-family: 'Arial Black', sans-serif;
+            letter-spacing: 2px;
         `;
-        el.textContent = `${count}连击! +${(count-2)*100}%`;
+        el.textContent = label;
+        
+        // 额外奖励文字
+        if (bonus > 0) {
+            const bonusEl = document.createElement('div');
+            bonusEl.style.cssText = `
+                position: absolute;
+                left: ${x}px;
+                top: ${y + 30}px;
+                transform: translate(-50%, -50%);
+                font-size: 16px;
+                font-weight: bold;
+                color: #ffd700;
+                text-shadow: 0 0 10px #ffd700, 1px 1px 2px rgba(0,0,0,0.5);
+                pointer-events: none;
+                animation: bonusFloat 1s ease-out forwards;
+                z-index: 99;
+            `;
+            bonusEl.textContent = `+${bonus} BONUS`;
+            container.appendChild(bonusEl);
+            setTimeout(() => bonusEl.remove(), 1000);
+        }
         
         // 添加动画样式
         if (!document.getElementById('comboAnim')) {
             const style = document.createElement('style');
             style.id = 'comboAnim';
             style.textContent = `
-                @keyframes comboPop {
+                @keyframes comboBoom {
+                    0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+                    15% { transform: translate(-50%, -50%) scale(1.5) rotate(5deg); opacity: 1; }
+                    30% { transform: translate(-50%, -50%) scale(1.2) rotate(-3deg); }
+                    50% { transform: translate(-50%, -50%) scale(1.3) rotate(0deg); }
+                    100% { transform: translate(-50%, -150%) scale(1) rotate(0deg); opacity: 0; }
+                }
+                @keyframes bonusFloat {
                     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-                    20% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
-                    80% { transform: translate(-50%, -80%) scale(1); opacity: 1; }
-                    100% { transform: translate(-50%, -100%) scale(0.8); opacity: 0; }
+                    20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+                    100% { transform: translate(-50%, -100%) scale(1); opacity: 0; }
                 }
             `;
             document.head.appendChild(style);
         }
         
         container.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
+        setTimeout(() => el.remove(), 1200);
+        
+        // 屏幕震动效果（3连击以上）
+        if (count >= 3) {
+            this.shakeScreen(count);
+        }
+    }
+    
+    // 屏幕震动
+    shakeScreen(intensity) {
+        const container = document.querySelector('.game-container');
+        const shakeAmount = Math.min(intensity * 2, 10);
+        let shakes = 0;
+        const maxShakes = 10;
+        
+        const doShake = () => {
+            if (shakes >= maxShakes) {
+                container.style.transform = '';
+                return;
+            }
+            const dx = (Math.random() - 0.5) * shakeAmount;
+            const dy = (Math.random() - 0.5) * shakeAmount;
+            container.style.transform = `translate(${dx}px, ${dy}px)`;
+            shakes++;
+            requestAnimationFrame(doShake);
+        };
+        doShake();
     }
 
     createParticles(x, y, color) {
