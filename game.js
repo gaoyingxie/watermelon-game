@@ -687,14 +687,21 @@ class Game {
             this.grid.insert(fruit);
         }
         
-        // 碰撞检测（使用网格优化）
+        // 碰撞检测（使用网格优化）- 稳定版本
+        const processed = new Set();
         for (let iter = 0; iter < CONFIG.PERF.COLLISION_ITERATIONS; iter++) {
+            processed.clear();
             for (const fruit of this.fruits) {
                 const neighbors = this.grid.getNeighbors(fruit);
                 for (const other of neighbors) {
                     if (fruit === other) continue;
+                    // 每轮迭代只处理一次每对碰撞
+                    const pairKey = fruit < other ? `${fruit}-${other}` : `${other}-${fruit}`;
+                    if (processed.has(pairKey)) continue;
+                    
                     if (this.checkCollision(fruit, other)) {
                         this.resolveCollision(fruit, other);
+                        processed.add(pairKey);
                     }
                 }
             }
@@ -704,7 +711,7 @@ class Game {
         for (const fruit of this.fruits) {
             if (fruit.y + fruit.radius > this.height) {
                 fruit.y = this.height - fruit.radius;
-                fruit.vy = 0;
+                if (fruit.vy > 0) fruit.vy = 0;
             }
         }
     }
@@ -732,25 +739,32 @@ class Game {
             return;
         }
         
+        // 位置修正（完全推开，减少迭代）
         const overlap = f1.radius + f2.radius - dist;
         const nx = dx / dist;
         const ny = dy / dist;
         
+        // 质量比分配位置修正
         const tm = f1.mass + f2.mass;
         const m1r = f2.mass / tm;
         const m2r = f1.mass / tm;
         
-        f1.x -= nx * overlap * m1r;
-        f1.y -= ny * overlap * m1r;
-        f2.x += nx * overlap * m2r;
-        f2.y += ny * overlap * m2r;
+        // 使用更大的分离系数，确保完全分开
+        const separationFactor = 1.02;
+        f1.x -= nx * overlap * m1r * separationFactor;
+        f1.y -= ny * overlap * m1r * separationFactor;
+        f2.x += nx * overlap * m2r * separationFactor;
+        f2.y += ny * overlap * m2r * separationFactor;
         
+        // 速度计算
         const dvx = f2.vx - f1.vx;
         const dvy = f2.vy - f1.vy;
         const vel = dvx * nx + dvy * ny;
         
+        // 只有靠近时才处理速度
         if (vel > 0) return;
         
+        // 计算脉冲冲量
         const j = -(1 + CONFIG.PHYSICS.BOUNCE) * vel / (1 / f1.mass + 1 / f2.mass);
         const ix = j * nx;
         const iy = j * ny;
@@ -760,11 +774,11 @@ class Game {
         f2.vx += ix / f2.mass;
         f2.vy += iy / f2.mass;
         
-        // 只在高速碰撞时添加少量旋转
+        // 添加微量旋转（仅高速碰撞）
         const rs = Math.sqrt(dvx * dvx + dvy * dvy);
-        if (rs > 3) {
-            f1.rotationSpeed += (Math.random() - 0.5) * 0.03;
-            f2.rotationSpeed += (Math.random() - 0.5) * 0.03;
+        if (rs > 2) {
+            f1.rotationSpeed += (Math.random() - 0.5) * 0.02;
+            f2.rotationSpeed += (Math.random() - 0.5) * 0.02;
         }
     }
     
