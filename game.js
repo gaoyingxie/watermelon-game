@@ -329,22 +329,38 @@ class Game {
         this.showShakeText();
         
         // 更新UI显示CD
-        this.updateShakeHintCD();
-        
-        // 5秒冷却
-        setTimeout(() => {
-            this.shakeCooldown = false;
-            this.updateShakeHintReady();
-        }, this.shakeCooldownTime);
+        this.startShakeHintCountdown();
     }
     
-    updateShakeHintCD() {
+    startShakeHintCountdown() {
         const shakeHint = document.querySelector('.shake-hint');
-        if (shakeHint) {
-            shakeHint.style.opacity = '0.5';
-            shakeHint.style.animation = 'none';
-            shakeHint.textContent = '⏳ 冷却中 (5s)';
-        }
+        if (!shakeHint) return;
+        
+        let remaining = 5;
+        shakeHint.style.opacity = '0.5';
+        shakeHint.style.animation = 'none';
+        shakeHint.textContent = `⏳ 冷却中 (${remaining}s)`;
+        
+        // 每秒更新倒计时
+        this.shakeCountdownInterval = setInterval(() => {
+            remaining--;
+            if (remaining > 0) {
+                shakeHint.textContent = `⏳ 冷却中 (${remaining}s)`;
+            } else {
+                clearInterval(this.shakeCountdownInterval);
+                this.shakeCountdownInterval = null;
+            }
+        }, 1000);
+        
+        // 5秒后恢复
+        setTimeout(() => {
+            this.shakeCooldown = false;
+            if (this.shakeCountdownInterval) {
+                clearInterval(this.shakeCountdownInterval);
+                this.shakeCountdownInterval = null;
+            }
+            this.updateShakeHintReady();
+        }, this.shakeCooldownTime);
     }
     
     updateShakeHintReady() {
@@ -935,6 +951,10 @@ class Game {
         this.lastDropTime = 0;
         this.isPointerDown = false;
         this.shakeCooldown = false;
+        if (this.shakeCountdownInterval) {
+            clearInterval(this.shakeCountdownInterval);
+            this.shakeCountdownInterval = null;
+        }
         this.updateShakeHintReady();
         this.updateScore();
         this.updatePreview();
