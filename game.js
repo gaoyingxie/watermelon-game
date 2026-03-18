@@ -244,9 +244,11 @@ class Game {
     }
 
     resize() {
-        const container = this.canvas.parentElement;
-        this.canvas.width = container.clientWidth;
-        this.canvas.height = container.clientHeight;
+        // 获取游戏区域(game-area)的实际尺寸
+        const gameArea = document.querySelector('.game-area');
+        const rect = gameArea.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
     }
