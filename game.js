@@ -312,9 +312,12 @@ class Game {
     
     triggerShake() {
         if (this.shakeCooldown || this.gameOver) return;
-        
+
         this.shakeCooldown = true;
-        
+
+        // 设置晃动保护时间（3秒内不检测游戏结束）
+        this.shakeProtectionTime = Date.now() + 3000;
+
         // 给所有水果随机冲击力
         for (const fruit of this.fruits) {
             // 水平随机力
@@ -324,10 +327,10 @@ class Game {
             // 随机旋转
             fruit.rotationSpeed += (Math.random() - 0.5) * 0.5;
         }
-        
+
         // 显示晃动效果文字
         this.showShakeText();
-        
+
         // 更新UI显示CD
         this.startShakeHintCountdown();
     }
@@ -748,6 +751,11 @@ class Game {
     }
 
     checkGameOver() {
+        // 晃动保护期内不检测游戏结束
+        if (this.shakeProtectionTime && Date.now() < this.shakeProtectionTime) {
+            return;
+        }
+        
         // 检查是否超出顶部
         for (const fruit of this.fruits) {
             if (fruit.y + fruit.radius < 0 && !fruit.isPreview) {
