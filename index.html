@@ -73,18 +73,10 @@
         }
         
         .preview-bar {
-            position: absolute;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 10px 20px;
-            border-radius: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 13px;
+            gap: 10px;
+            font-size: 14px;
             color: #666;
         }
         
@@ -97,11 +89,12 @@
             justify-content: center;
             font-size: 22px;
             animation: bounce 1s ease infinite;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+            50% { transform: translateY(-3px); }
         }
         
         .dashed-line {
@@ -220,15 +213,15 @@
         </div>
         
         <div class="game-area">
-            <div class="preview-bar">
-                <span>下一个</span>
-                <div class="preview-fruit" id="preview">🫐</div>
-            </div>
             <div class="dashed-line"></div>
             <canvas id="gameCanvas"></canvas>
         </div>
         
         <div class="controls">
+            <div class="preview-bar">
+                <span>下一个</span>
+                <div class="preview-fruit" id="preview">🫐</div>
+            </div>
             <button class="btn btn-secondary" onclick="game.dropFruit()">⬇️ 放置</button>
             <button class="btn btn-primary" onclick="game.reset()">🔄 重新开始</button>
         </div>
