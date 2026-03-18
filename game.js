@@ -309,17 +309,31 @@ class Game {
         const dy = f2.y - f1.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
-        if (dist === 0) return; // 防止除以零
+        if (dist === 0) {
+            // 完全重叠时随机推开
+            const angle = Math.random() * Math.PI * 2;
+            const push = (f1.radius + f2.radius) / 2;
+            f1.x -= Math.cos(angle) * push;
+            f1.y -= Math.sin(angle) * push;
+            f2.x += Math.cos(angle) * push;
+            f2.y += Math.sin(angle) * push;
+            return;
+        }
         
-        // 位置修正（防止重叠）
-        const overlap = (f1.radius + f2.radius - dist) / 2;
+        // 位置修正（完全推开，不留重叠）
+        const overlap = f1.radius + f2.radius - dist;
         const nx = dx / dist;
         const ny = dy / dist;
         
-        f1.x -= nx * overlap;
-        f1.y -= ny * overlap;
-        f2.x += nx * overlap;
-        f2.y += ny * overlap;
+        // 根据质量分配推动距离
+        const totalMass = f1.mass + f2.mass;
+        const m1Ratio = f2.mass / totalMass;
+        const m2Ratio = f1.mass / totalMass;
+        
+        f1.x -= nx * overlap * m1Ratio;
+        f1.y -= ny * overlap * m1Ratio;
+        f2.x += nx * overlap * m2Ratio;
+        f2.y += ny * overlap * m2Ratio;
         
         // 弹性碰撞响应
         const dvx = f2.vx - f1.vx;
@@ -636,8 +650,8 @@ class Game {
             }
         }
         
-        // 多轮碰撞处理（让堆叠更稳定）
-        for (let iteration = 0; iteration < 3; iteration++) {
+        // 多轮碰撞处理（增加迭代次数让堆叠更稳定）
+        for (let iteration = 0; iteration < 5; iteration++) {
             for (let i = 0; i < this.fruits.length; i++) {
                 for (let j = i + 1; j < this.fruits.length; j++) {
                     if (this.checkCircleCollision(this.fruits[i], this.fruits[j])) {
@@ -734,16 +748,6 @@ class Game {
         // 绘制粒子
         for (const p of this.particles) {
             p.draw(this.ctx);
-        }
-        
-        // 调试：画底部边界红线
-        if (this.debugBoundary) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, this.height);
-            this.ctx.lineTo(this.width, this.height);
-            this.ctx.strokeStyle = '#ff0000';
-            this.ctx.lineWidth = 3;
-            this.ctx.stroke();
         }
     }
 
