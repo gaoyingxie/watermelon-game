@@ -193,50 +193,21 @@ class Game {
         this.resize();
         window.addEventListener('resize', () => this.resize());
         
-        // 触摸/鼠标控制 - 防止按住连发
-        this.isPointerDown = false;
-        
+        // 触摸/鼠标控制 - 点击即发射
         this.canvas.addEventListener('mousemove', (e) => this.handleMove(e));
         this.canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             this.handleMove(e);
         });
         
-        // 鼠标按下
-        this.canvas.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return; // 只响应左键
-            this.isPointerDown = true;
-            this.handleMove(e);
-        });
+        // 点击发射
+        this.canvas.addEventListener('click', () => this.dropFruit());
         
-        // 鼠标抬起 - 只有抬起时才发射
-        this.canvas.addEventListener('mouseup', (e) => {
-            if (e.button !== 0) return;
-            if (this.isPointerDown) {
-                this.isPointerDown = false;
-                this.dropFruit();
-            }
-        });
-        
-        // 鼠标离开canvas时重置
-        this.canvas.addEventListener('mouseleave', () => {
-            this.isPointerDown = false;
-        });
-        
-        // 触摸开始
+        // 触摸发射
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            this.isPointerDown = true;
             this.handleMove(e);
-        });
-        
-        // 触摸结束 - 只有结束时才发射
-        this.canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            if (this.isPointerDown) {
-                this.isPointerDown = false;
-                this.dropFruit();
-            }
+            this.dropFruit();
         });
         
         this.updatePreview();
@@ -268,11 +239,6 @@ class Game {
     dropFruit() {
         if (this.gameOver) return;
         
-        // 冷却检查 - 500ms内只能发射一次
-        const now = Date.now();
-        if (now - this.lastDropTime < 500) return;
-        this.lastDropTime = now;
-        
         // 在鼠标位置创建水果（从顶部掉落）
         const fruit = new Fruit(this.currentFruitType, this.mouseX, FRUITS[this.currentFruitType].radius + 10);
         fruit.vy = 2; // 初始下落速度
@@ -285,16 +251,24 @@ class Game {
     }
 
     updatePreview() {
-        document.getElementById('preview').textContent = FRUITS[this.nextFruitType].emoji;
-        document.getElementById('preview').style.background = FRUITS[this.nextFruitType].color + '40';
+        // 预览显示当前即将发射的水果
+        document.getElementById('preview').textContent = FRUITS[this.currentFruitType].emoji;
+        document.getElementById('preview').style.background = FRUITS[this.currentFruitType].color + '40';
         
-        // 更新预览水果
-        this.previewFruit = new Fruit(
-            this.currentFruitType, 
-            this.mouseX, 
-            FRUITS[this.currentFruitType].radius + 20, 
-            true
-        );
+        // 更新预览水果位置
+        if (this.previewFruit) {
+            this.previewFruit.type = this.currentFruitType;
+            this.previewFruit.radius = FRUITS[this.currentFruitType].radius;
+            this.previewFruit.emoji = FRUITS[this.currentFruitType].emoji;
+            this.previewFruit.color = FRUITS[this.currentFruitType].color;
+        } else {
+            this.previewFruit = new Fruit(
+                this.currentFruitType, 
+                this.mouseX, 
+                FRUITS[this.currentFruitType].radius + 20, 
+                true
+            );
+        }
     }
 
     checkCircleCollision(f1, f2) {
