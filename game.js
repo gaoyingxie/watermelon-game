@@ -204,6 +204,23 @@ class Fruit {
         }
     }
     
+    generateTexturePositions() {
+        const positions = [];
+        // 为橙子(type 4)生成12个固定的小点位置
+        for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            const r = 0.4 + (Math.sin(i * 1.5) + 1) * 0.2;
+            positions.push({ angle, r });
+        }
+        // 为椰子(type 9)生成15条固定短线
+        for (let i = 0; i < 15; i++) {
+            const angle = (i / 15) * Math.PI * 2 + Math.sin(i * 2);
+            const r = 0.3 + (i % 5) * 0.1;
+            positions.push({ angle, r });
+        }
+        return positions;
+    }
+    
     draw(ctx) {
         ctx.save();
         ctx.translate(this.x, this.y);
