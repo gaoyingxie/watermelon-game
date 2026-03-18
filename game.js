@@ -3,19 +3,19 @@
  * 可爱画风 + 可靠碰撞
  */
 
-// 水果配置（从小到大）- 高辨识度配色
+// 水果配置（从小到大）- 高辨识度配色 - 尺寸加大增加难度
 const FRUITS = [
-    { name: '蓝莓', emoji: '🫐', radius: 15, color: '#5c6bc0', score: 2 },      // 深蓝紫
-    { name: '柠檬', emoji: '🍋', radius: 20, color: '#ffeb3b', score: 4 },      // 明黄
-    { name: '猕猴桃', emoji: '🥝', radius: 25, color: '#8bc34a', score: 8 },    // 草绿
-    { name: '番茄', emoji: '🍅', radius: 30, color: '#e53935', score: 16 },     // 鲜红
-    { name: '橙子', emoji: '🍊', radius: 36, color: '#fb8c00', score: 32 },     // 橙黄
-    { name: '苹果', emoji: '🍎', radius: 42, color: '#c62828', score: 64 },     // 深红
-    { name: '梨', emoji: '🍐', radius: 50, color: '#cddc39', score: 128 },      // 青柠
-    { name: '桃子', emoji: '🍑', radius: 58, color: '#f48fb1', score: 256 },    // 粉红
-    { name: '菠萝', emoji: '🍍', radius: 68, color: '#ffc107', score: 512 },    // 金黄
-    { name: '椰子', emoji: '🥥', radius: 80, color: '#795548', score: 1024 },   // 棕色
-    { name: '西瓜', emoji: '🍉', radius: 95, color: '#2e7d32', score: 2048 }    // 墨绿条纹
+    { name: '蓝莓', emoji: '🫐', radius: 20, color: '#5c6bc0', score: 2 },      // 深蓝紫
+    { name: '柠檬', emoji: '🍋', radius: 26, color: '#ffeb3b', score: 4 },      // 明黄
+    { name: '猕猴桃', emoji: '🥝', radius: 33, color: '#8bc34a', score: 8 },    // 草绿
+    { name: '番茄', emoji: '🍅', radius: 40, color: '#e53935', score: 16 },     // 鲜红
+    { name: '橙子', emoji: '🍊', radius: 47, color: '#fb8c00', score: 32 },     // 橙黄
+    { name: '苹果', emoji: '🍎', radius: 55, color: '#c62828', score: 64 },     // 深红
+    { name: '梨', emoji: '🍐', radius: 65, color: '#cddc39', score: 128 },      // 青柠
+    { name: '桃子', emoji: '🍑', radius: 75, color: '#f48fb1', score: 256 },    // 粉红
+    { name: '菠萝', emoji: '🍍', radius: 88, color: '#ffc107', score: 512 },    // 金黄
+    { name: '椰子', emoji: '🥥', radius: 104, color: '#795548', score: 1024 },  // 棕色
+    { name: '西瓜', emoji: '🍉', radius: 123, color: '#2e7d32', score: 2048 }   // 墨绿条纹
 ];
 
 // 物理常量
